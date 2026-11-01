@@ -1,0 +1,32 @@
+@import "tailwindcss";
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  *, ::before, ::after {
+    transition-property: background-color, border-color, color, fill, stroke, transform, width, height, opacity, box-shadow, filter, backdrop-filter;
+    transition-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
+    transition-duration: 400ms;
+  }
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(89, 178, 146, 0.3);
+  border-radius: 9999px;
+  transition: background 300ms ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(89, 178, 146, 0.6);
+}
