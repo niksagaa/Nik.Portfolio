@@ -1,11 +1,12 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { User, Save, Plus, Trash2, Edit, SaveIcon } from 'lucide-react';
+import { User, Save, Plus, Trash2, Edit, SaveIcon, ArrowUpAZ } from 'lucide-react';
 import { CVData, Experience, Education } from '@/types';
 import { getProfileFromDB, saveProfileToDB } from '@/services/profileServices/personalInfo';
 import { saveExperienceToDB, getExperienceFromDB, deleteExperienceFromDB, updateExperienceFromDB } from '@/services/profileServices/experience'
-import { details } from 'framer-motion/client';
+import { updateEducation, deleteEducation, getEducationFromDB, saveEducationToDB } from '@/services/profileServices/education';
+import { degrees } from 'framer-motion';
 
 interface ProfileEditorProps {
   cvData: CVData;
@@ -21,16 +22,16 @@ export default function ProfileEditor({ cvData, setCvData, showToast, isDarkMode
   const [newDetails, setNewDetails] = useState('');
   const [experienceID, setexperienceID] = useState<string | null>(null)
 
-  // Temporary state for new education form
+  // Temporary state for new education form & edit ID tracking
   const [newDegree, setNewDegree] = useState('');
   const [newSchool, setNewSchool] = useState('');
   const [newEduPeriod, setNewEduPeriod] = useState('');
+  const [educationID, setEducationID] = useState<string | null>(null); // 👈 ID state para sa Education edit
 
   // Auto-fetch profile data on mount using the service layer
   useEffect(() => {
     async function loadData() {
       try {
-
         const profile = await getProfileFromDB();
         if (profile) {
           setCvData((prev) => ({
@@ -53,6 +54,14 @@ export default function ProfileEditor({ cvData, setCvData, showToast, isDarkMode
           }));
         }
 
+        const dbEducation = await getEducationFromDB()
+        if (dbEducation) {
+          setCvData((prev) => ({
+            ...prev,
+            education: dbEducation
+          }));
+        }
+
       } catch (err: any) {
         console.error("Error fetching profile:", err.message);
       }
@@ -61,7 +70,6 @@ export default function ProfileEditor({ cvData, setCvData, showToast, isDarkMode
     loadData();
   }, [setCvData]);
 
-  // Handle saving profile changes to Supabase
   const handleSaveProfile = async () => {
     try {
       await saveProfileToDB(cvData);
@@ -130,7 +138,7 @@ export default function ProfileEditor({ cvData, setCvData, showToast, isDarkMode
 
   const handleUpdateExperience = async (e: React.FormEvent) => {
     e.preventDefault()
-    if(!experienceID) return
+    if (!experienceID) return
     try {
       const updatedData = {
         role: newRole,
@@ -142,20 +150,18 @@ export default function ProfileEditor({ cvData, setCvData, showToast, isDarkMode
       await updateExperienceFromDB(updatedData, experienceID)
       const dbexperience = await getExperienceFromDB();
       if (dbexperience) {
-
         setCvData((prev) => ({
           ...prev,
           experience: dbexperience,
         }));
-
       }
 
-        setexperienceID('')
-    setNewRole('')
-    setNewCompany('')
-    setNewPeriod('')
-    setNewDetails('')
-    showToast("Experience Successfully Updated")
+      setexperienceID(null)
+      setNewRole('')
+      setNewCompany('')
+      setNewPeriod('')
+      setNewDetails('')
+      showToast("Experience Successfully Updated")
 
     } catch (error: any) {
       console.error('Error updating experience:', error)
@@ -164,14 +170,16 @@ export default function ProfileEditor({ cvData, setCvData, showToast, isDarkMode
   }
 
   const handleCancelEdit = () => {
-    setexperienceID('')
+    setexperienceID(null)
     setNewRole('')
     setNewCompany('')
     setNewPeriod('')
     setNewDetails('')
   }
 
-  const handleAddEducation = (e: React.FormEvent) => {
+  // ================= EDUCATION HANDLERS (NAKABUKOD NA) =================
+
+  const handleAddEducation = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newDegree.trim() || !newSchool.trim()) return;
 
@@ -181,19 +189,81 @@ export default function ProfileEditor({ cvData, setCvData, showToast, isDarkMode
       period: newEduPeriod
     };
 
-    setCvData({
-      ...cvData,
-      education: [newEdu, ...cvData.education]
-    });
+    try {
+      await saveEducationToDB(newEdu);
+      const updatedEducationList = await getEducationFromDB();
 
-    setNewDegree('');
-    setNewSchool('');
-    setNewEduPeriod('');
+      setCvData({
+        ...cvData,
+        education: updatedEducationList || [newEdu, ...cvData.education]
+      });
+
+      setNewDegree('');
+      setNewSchool('');
+      setNewEduPeriod('');
+      showToast("Successfully saved education");
+    } catch (error: any) {
+      console.error('Error saving education:', error);
+      showToast(`Error saving education: ${error}`);
+    }
   };
 
-  const handleDeleteEducation = (index: number) => {
-    const updatedEdu = cvData.education.filter((_, i) => i !== index);
-    setCvData({ ...cvData, education: updatedEdu });
+  const handleEditEducation = (edu: Education) => {
+    if (!edu.id) return;
+    setEducationID(edu.id);
+    setNewDegree(edu.degree);
+    setNewEduPeriod(edu.period);
+    setNewSchool(edu.school);
+  };
+
+  const handleCancelEditEducation = () => {
+    setEducationID(null);
+    setNewDegree("");
+    setNewEduPeriod("");
+    setNewSchool("");
+  }
+
+  const handleUpdateEducation = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      if (!educationID) return
+      const updatedEduInfo = {
+        degree: newDegree,
+        period: newEduPeriod,
+        school: newSchool
+      }
+
+      await updateEducation(updatedEduInfo, educationID)
+      const Edu = await getEducationFromDB()
+      if (Edu) {
+        setCvData((prev) => ({
+          ...prev,
+          education: Edu
+        }));
+      }
+
+      setEducationID(null)
+      setNewDegree("")
+      setNewSchool("")
+      setNewEduPeriod('')
+      showToast("Education Updated Successfully")
+    } catch (error) {
+      console.log(error)
+      showToast("Error updating education")
+    }
+  };
+
+  const handleDeleteEducation = async (id?: string) => {
+    if (!id) return;
+    try {
+      await deleteEducation(id);
+      const updatedEducList = cvData.education.filter((edu) => edu.id !== id);
+      setCvData({ ...cvData, education: updatedEducList });
+      showToast("Education deleted successfully");
+    } catch (error: any) {
+      console.error(`Error: ${error}`);
+      showToast(`Error: ${error}`);
+    }
   };
 
   return (
@@ -305,9 +375,22 @@ export default function ProfileEditor({ cvData, setCvData, showToast, isDarkMode
             <input type="text" placeholder="School / University" value={newSchool} onChange={(e) => setNewSchool(e.target.value)} className={`w-full px-3 py-2 rounded-lg border text-xs outline-none ${isDarkMode ? 'bg-black border-[#222222] text-white' : 'bg-white border-gray-300 text-black'}`} />
             <input type="text" placeholder="Period (e.g. 2017 - 2021)" value={newEduPeriod} onChange={(e) => setNewEduPeriod(e.target.value)} className={`w-full px-3 py-2 rounded-lg border text-xs outline-none ${isDarkMode ? 'bg-black border-[#222222] text-white' : 'bg-white border-gray-300 text-black'}`} />
           </div>
-          <button onClick={handleAddEducation} className="px-4 py-2 rounded-lg bg-[#59B292] text-black font-bold text-xs flex items-center gap-1.5 hover:opacity-90 transition">
-            <Plus className="w-3.5 h-3.5" /> Add Education
-          </button>
+          {!educationID ? (
+            <button onClick={handleAddEducation} className="px-4 py-2 rounded-lg bg-[#59B292] text-black font-bold text-xs flex items-center gap-1.5 hover:opacity-90 transition">
+              <Plus className="w-3.5 h-3.5" /> Add Education
+            </button>
+          ) : (
+            <>
+              <div className='flex flex-row gap-2'>
+                <button onClick={handleUpdateEducation} className="px-4 py-2 rounded-lg bg-[#59B292] text-black font-bold text-xs flex items-center gap-1.5 hover:opacity-90 transition">
+                  <Save className="w-3.5 h-3.5" /> Update
+                </button>
+                <button onClick={handleCancelEditEducation} className="px-4 py-2 rounded-lg bg-gray-500 text-white font-bold text-xs flex items-center gap-1.5 hover:opacity-90 transition">
+                  Cancel
+                </button>
+              </div>
+            </>
+          )}
         </div>
 
         {/* List of Educations */}
@@ -318,9 +401,14 @@ export default function ProfileEditor({ cvData, setCvData, showToast, isDarkMode
                 <p className="font-bold text-sm">{edu.degree}</p>
                 <p className="text-xs text-gray-400">{edu.school} <span className="text-[#59B292] font-mono">({edu.period})</span></p>
               </div>
-              <button onClick={() => handleDeleteEducation(index)} className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition shrink-0">
-                <Trash2 className="w-4 h-4" />
-              </button>
+              <div className="flex flex-row">
+                <button onClick={() => handleDeleteEducation(edu.id)} className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition shrink-0">
+                  <Trash2 className="w-4 h-4" />
+                </button>
+                <button onClick={() => handleEditEducation(edu)} className="p-2 text-emerald-500 hover:bg-emerald-500/10 rounded-lg transition shrink-0">
+                  <Edit className="w-4 h-4" />
+                </button>
+              </div>
             </div>
           ))}
         </div>

@@ -34,6 +34,7 @@ export interface Experience {
 }
 
 export interface Education {
+  id?: string,
   degree: string;
   school: string;
   period: string;
