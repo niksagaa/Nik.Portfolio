@@ -37,7 +37,7 @@ export default function AdminLogin({
           : 'bg-white border-neutral-200/80'
       }`}>
         {/* Background Pattern */}
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-size[24px_24px] pointer-events-none" />
 
         {/* Top Branding */}
         <div className="flex items-center gap-2.5 relative z-10">

@@ -17,7 +17,6 @@ export async function saveProfileToDB(cvData: any) {
   if (fetchError) throw fetchError;
 
   const profileData = {
-    id: "11111111-1111-1111-1111-111111111111",
     full_name: cvData.fullName,
     job_title: cvData.title,
     email: cvData.email,

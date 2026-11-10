@@ -6,7 +6,6 @@ import { CVData, Experience, Education } from '@/types';
 import { getProfileFromDB, saveProfileToDB } from '@/services/profileServices/personalInfo';
 import { saveExperienceToDB, getExperienceFromDB, deleteExperienceFromDB, updateExperienceFromDB } from '@/services/profileServices/experience'
 import { updateEducation, deleteEducation, getEducationFromDB, saveEducationToDB } from '@/services/profileServices/education';
-import { degrees } from 'framer-motion';
 
 interface ProfileEditorProps {
   cvData: CVData;

@@ -1,7 +1,7 @@
 // types/index.ts
 
 export interface Project {
-  id: string;
+  id?: string;
   title: string;
   summary: string;
   category: string;
@@ -16,11 +16,13 @@ export interface ExtendedProject extends Project {
   solutionHighlights?: string[];
   measuredImpact?: string;
 }
-
+  
 export interface Skill {
-  id: string;
+  id?: string;
   name: string;
   category: string;
+  proficiency: string,
+  icon: string,
   level?: number;
 }
 

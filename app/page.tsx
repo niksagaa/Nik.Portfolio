@@ -282,7 +282,7 @@ export default function PublicPortfolio() {
 
       {/* MOBILE DROPDOWN MENU */}
       {mobileMenuOpen && (
-        <div className={`lg:hidden fixed inset-x-0 top-[57px] z-40 border-b p-4 space-y-2 shadow-2xl ${isDarkMode ? 'bg-[#121212] border-[#222222]' : 'bg-gray-100 border-gray-200'}`}>
+        <div className={`lg:hidden fixed inset-x-0 top-14.25 z-40 border-b p-4 space-y-2 shadow-2xl ${isDarkMode ? 'bg-[#121212] border-[#222222]' : 'bg-gray-100 border-gray-200'}`}>
           <a href="#about" onClick={() => setMobileMenuOpen(false)} className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>About</a>
           <a href="#projects" onClick={() => setMobileMenuOpen(false)} className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>Projects</a>
           <a href="#skills" onClick={() => setMobileMenuOpen(false)} className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>Tech Stack</a>

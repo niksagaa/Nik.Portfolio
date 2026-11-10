@@ -5,7 +5,7 @@ const supabase = createClient()
 const getProfileIDFromDB = async () => {
     const { data, error } = await supabase.from('profiles').select("*");
     if (error) throw error
-    if (!data || data.length === 0) throw new Error('No profile found');
+    if (!data) throw new Error('No profile found');
     return data[0].id;
 }
 
