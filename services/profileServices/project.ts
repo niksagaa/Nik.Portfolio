@@ -23,7 +23,6 @@ export async function getProjectInfoFromDB() {
 
         if (p.solution) {
             try {
-                // Subukan kung isa itong JSON string array (hal. ["item1", "item2"])
                 const jsonParsed = JSON.parse(p.solution);
                 if (Array.isArray(jsonParsed)) {
                     parsedSolutions = jsonParsed;
@@ -31,9 +30,8 @@ export async function getProjectInfoFromDB() {
                     throw new Error();
                 }
             } catch {
-                // Kung hindi JSON, i-split gamit ang comma o bagong linya
                 parsedSolutions = p.solution
-                    .replace(/[\[\]"]/g, '') // Tanggalin ang mga natitirang brackets o quotes kung meron man
+                    .replace(/[\[\]"]/g, '')
                     .split(',')
                     .map((s: string) => s.trim())
                     .filter(Boolean);

@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { createClient } from '@/utils/supabase/client'; // <-- Idinagdag ang Supabase client
 import { ExtendedProject, Skill, CVData, Testimonial } from '@/types';
 import { CheckCircle, Menu, X, Sun, Moon } from 'lucide-react';
 import PublicSidebar from '@/components/public/PublicSidebar';
@@ -12,89 +11,25 @@ import SkillsSection from '@/components/public/SkillsSection';
 import CVSection from '@/components/public/CVSection';
 import TestimonialsSection from '@/components/public/TestimonialsSection';
 import ContactSection from '@/components/public/ContactSection';
-
-const INITIAL_PROJECTS: ExtendedProject[] = [
-  {
-    id: "p1",
-    title: "Enterprise SaaS Analytics Dashboard",
-    summary: "High-performance data visualization platform handling complex real-time telemetry feeds.",
-    category: "Full Stack",
-    tags: ["React", "TypeScript", "Tailwind CSS", "WebSockets"],
-    liveUrl: "https://example.com",
-    githubUrl: "https://github.com",
-    featured: true,
-    problemStatement: "Enterprise users experienced frequent UI freezes and 4+ second latency when rendering high-volume live data tables.",
-    solutionHighlights: [
-      "Architected windowed virtualization for high-frequency data streams",
-      "Implemented optimistic UI updates and resilient WebSocket reconnect strategies",
-      "Designed dark/light high-contrast theme system compliant with WCAG AAA standards"
-    ],
-    measuredImpact: "Reduced initial page load latency by 65% and maintained 60 FPS scrolling with over 10,000 active records."
-  },
-  {
-    id: "p2",
-    title: "Headless E-Commerce Mobile Engine",
-    summary: "Microservices-backed shop engine engineered for sub-second checkout speeds and offline resilience.",
-    category: "Frontend & API",
-    tags: ["Next.js", "TypeScript", "Node.js", "Tailwind CSS"],
-    liveUrl: "https://example.com",
-    githubUrl: "https://github.com",
-    featured: true,
-    problemStatement: "Legacy e-commerce frontend had high bounce rates on mobile due to bloated bundles and poor image optimization.",
-    solutionHighlights: [
-      "Migrated to Next.js App Router with granular component-level code splitting",
-      "Built custom offline shopping bag synchronization via IndexedDB",
-      "Streamlined single-page checkout flow reducing friction points from 5 down to 2 steps"
-    ],
-    measuredImpact: "Boosted mobile conversion rate by 28% and slashed mobile payload size by 1.8MB."
-  }
-];
-
-const INITIAL_SKILLS: Skill[] = [
-  { id: "s1", name: "React.js / Next.js", category: "Frontend Core", level: 90 },
-  { id: "s2", name: "TypeScript", category: "Frontend Core", level: 88 },
-  { id: "s3", name: "Tailwind CSS", category: "Frontend Core", level: 95 },
-  { id: "s4", name: "Node.js & Express", category: "Backend & APIs", level: 80 },
-  { id: "s5", name: "RESTful APIs & WebSockets", category: "Backend & APIs", level: 85 },
-  { id: "s6", name: "PostgreSQL & Prisma", category: "Backend & APIs", level: 78 },
-  { id: "s7", name: "Git / GitHub Actions", category: "Workflow & Tools", level: 90 },
-  { id: "s8", name: "Figma to Responsive Code", category: "Workflow & Tools", level: 88 }
-];
-
-const INITIAL_CV: CVData = {
-  fullName: "Dominic Saga",
-  title: "Jr Website Developer",
-  email: "sgnickk@gmail.com",
-  phone: "+63 991 302 8741",
-  summary: "Frontend-focused Engineer with hands-on experience building fast, accessible, and maintainable web applications.",
-  experience: [
-    {
-      company: "TechCorp Global",
-      role: "Frontend Web Developer",
-      period: "2023 - Present",
-      details: "Spearheaded frontend performance optimizations across core web apps."
-    }
-  ],
-  education: [
-    {
-      degree: "B.S. in Computer Science",
-      school: "State University of Technology",
-      period: "2017 - 2021"
-    }
-  ]
-};
+import {
+  getProfileFromDB,
+  getSkills,
+  getEducationFromDB,
+  getExperienceFromDB,
+  getProjectInfoFromDB
+} from '@/services/publicdata/personalinfo';
 
 export default function PublicPortfolio() {
-  const supabase = createClient(); // <-- Instance ng Supabase client
   const router = useRouter();
   const [mounted, setMounted] = useState<boolean>(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<string>('about');
   const [toast, setToast] = useState<string | null>(null);
 
-  const [projects, setProjects] = useState<ExtendedProject[]>(INITIAL_PROJECTS);
-  const [skills, setSkills] = useState<Skill[]>(INITIAL_SKILLS);
-  const [cvData, setCvData] = useState<CVData>(INITIAL_CV);
+  const [projects, setProjects] = useState<ExtendedProject[]>([]);
+  const [skills, setSkills] = useState<Skill[]>([]);
+
+  const [cvData, setCvData] = useState<CVData | null>(null);
 
   const [testimonials, setTestimonials] = useState<Testimonial[]>([
     { id: "t1", name: "Sarah Jenkins", role: "Product Lead at TechCorp", message: "Alex delivered clean, well-structured React code ahead of schedule.", rating: 5, date: "2026-05-15" }
@@ -105,7 +40,6 @@ export default function PublicPortfolio() {
   const [newRating, setNewRating] = useState<number>(5);
   const [hoverRating, setHoverRating] = useState<number>(0);
 
-  // Persistent Dark/Light Mode State
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
       const savedTheme = localStorage.getItem('portfolio_theme');
@@ -122,7 +56,6 @@ export default function PublicPortfolio() {
     }
   }, [isDarkMode]);
 
-  // Persistent Sidebar Collapsed State
   const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('sidebar_collapsed');
@@ -139,37 +72,50 @@ export default function PublicPortfolio() {
     }
   }, [sidebarCollapsed]);
 
-  // Kunin ang data mula sa Supabase profiles table pagka-load
   useEffect(() => {
     setMounted(true);
 
-    async function fetchPublicProfile() {
-      const { data, error } = await supabase.from('profiles').select('*');
-      if (data && data.length > 0 && !error) {
-        const profile = data[0];
-        setCvData((prev) => ({
-          ...prev,
-          fullName: profile.full_name || prev.fullName,
-          title: profile.job_title || prev.title,
-          email: profile.email || prev.email,
-          phone: profile.phone || prev.phone,
-          summary: profile.bio || prev.summary,
-          githubUrl: profile.github_url || prev.githubUrl,
-          linkedinUrl: profile.linkedin_url || prev.linkedinUrl,
-        }));
+    async function loadPortfolioData() {
+      try {
+        const profile = await getProfileFromDB();
+        if (profile) {
+          setCvData({
+            fullName: profile.full_name || '',
+            title: profile.job_title || '',
+            email: profile.email || '',
+            phone: profile.phone || '',
+            summary: profile.bio || '',
+            githubUrl: profile.github_url || '',
+            linkedinUrl: profile.linkedin_url || '',
+            experience: await getExperienceFromDB() || [],
+            education: await getEducationFromDB() || []
+          });
+        }
+
+        const fetchedSkills = await getSkills();
+        if (fetchedSkills && fetchedSkills.length > 0) {
+          setSkills(fetchedSkills);
+        }
+
+        const fetchedProjects = await getProjectInfoFromDB();
+        if (fetchedProjects && fetchedProjects.length > 0) {
+          setProjects(fetchedProjects);
+        }
+
+      } catch (error: any) {
+        console.error("Error loading portfolio data from DB:", error?.message || error);
+        const savedProj = localStorage.getItem('app_projects');
+        const savedSkills = localStorage.getItem('app_skills');
+        if (savedProj) setProjects(JSON.parse(savedProj));
+        if (savedSkills) setSkills(JSON.parse(savedSkills));
       }
+
+      const savedTestimonials = localStorage.getItem('app_testimonials');
+      if (savedTestimonials) setTestimonials(JSON.parse(savedTestimonials));
     }
 
-    fetchPublicProfile();
-
-    const savedProj = localStorage.getItem('app_projects');
-    const savedSkills = localStorage.getItem('app_skills');
-    const savedTestimonials = localStorage.getItem('app_testimonials');
-
-    if (savedProj) setProjects(JSON.parse(savedProj));
-    if (savedSkills) setSkills(JSON.parse(savedSkills));
-    if (savedTestimonials) setTestimonials(JSON.parse(savedTestimonials));
-  }, [supabase]);
+    loadPortfolioData();
+  }, []);
 
   useEffect(() => {
     if (mounted) {
@@ -184,7 +130,7 @@ export default function PublicPortfolio() {
         if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return;
 
         e.preventDefault();
-        router.push('/admin');
+        router.push('/admin/login');
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -197,16 +143,9 @@ export default function PublicPortfolio() {
   };
 
   const copyEmailToClipboard = () => {
-    navigator.clipboard.writeText(cvData.email);
-    showToast("Email address copied to clipboard!");
-  };
-
-  const copyGitHubToClipboard = () => {
-    if (cvData.githubUrl) {
-      navigator.clipboard.writeText(cvData.githubUrl);
-      showToast("GitHub URL copied to clipboard!");
-    } else {
-      showToast("No GitHub URL available.");
+    if (cvData?.email) {
+      navigator.clipboard.writeText(cvData.email);
+      showToast("Email address copied to clipboard!");
     }
   };
 
@@ -234,7 +173,7 @@ export default function PublicPortfolio() {
 
   const currentYear = mounted ? new Date().getFullYear() : 2026;
 
-  if (!mounted) return null;
+  if (!mounted || !cvData) return null;
 
   return (
     <div className={`min-h-screen relative transition-colors duration-400 ${isDarkMode ? 'bg-black text-white' : 'bg-white text-black'}`}>

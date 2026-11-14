@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Cpu, Plus, Trash2, Sparkles, Layers, Terminal } from 'lucide-react';
 import { Skill } from '@/types';
-import { uploadSkills } from '@/services/profileServices/skill';
+import { deleteSkills, getSkills, uploadSkills } from '@/services/profileServices/skill';
 
 interface SkillsEditorProps {
     skills: Skill[];
@@ -28,6 +28,20 @@ export default function SkillsEditor({ skills, setSkills, showToast, isDarkMode 
     const [newSkillProficiency, setNewSkillProficiency] = useState('Proficient');
     const [newSkillIcon, setNewSkillIcon] = useState('');
 
+    useEffect(() => {
+        async function loadSkills() {
+            try {
+                const techStacks = await getSkills()
+                if (techStacks) {
+                    setSkills(techStacks)
+                }
+            } catch (error) {
+                console.error(error)
+            }
+        }
+        loadSkills()
+    }, [])
+
     const handleAddSkill = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!newSkillName.trim()) return;
@@ -43,11 +57,11 @@ export default function SkillsEditor({ skills, setSkills, showToast, isDarkMode 
         try {
             // Kunin ang binuong record mula sa Supabase kasama ang UUID nito
             const savedSkill = await uploadSkills(newSkillPayload);
-            
+
             if (savedSkill) {
                 setSkills(prev => [...prev, savedSkill]);
             }
-            
+
             setNewSkillName('');
             setNewSkillIcon('');
             showToast("Tech stack competency added!");
@@ -57,17 +71,21 @@ export default function SkillsEditor({ skills, setSkills, showToast, isDarkMode 
         }
     };
 
-    const handleDeleteSkill = (id?: string) => {
-        if (!id) return;
-        const updated = skills.filter(s => s.id !== id);
-        setSkills(updated);
-        localStorage.setItem('app_skills', JSON.stringify(updated));
-        showToast("Skill removed.");
+    const handleDeleteSkill = async (id?: string) => {
+        try {
+            if (!id) return;
+            await deleteSkills(id)
+            const updated = skills.filter(s => s.id !== id);
+            setSkills(updated);
+            localStorage.setItem('app_skills', JSON.stringify(updated));
+            showToast("Skill removed.");
+        } catch (error) {
+            console.error(error)
+        }
     };
 
     return (
         <section className="space-y-8 max-w-5xl mx-auto pb-12">
-            {/* Header Section */}
             <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-6 ${isDarkMode ? 'border-gray-800/80' : 'border-gray-200'}`}>
                 <div className="space-y-1">
                     <h2 className={`text-2xl font-extrabold flex items-center gap-3 tracking-tight ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
@@ -146,7 +164,7 @@ export default function SkillsEditor({ skills, setSkills, showToast, isDarkMode 
                 </div>
 
                 <button type="submit" className="w-full sm:w-auto px-7 py-3.5 rounded-2xl bg-[#59B292] text-black font-bold text-xs tracking-wide uppercase flex items-center justify-center gap-2.5 hover:opacity-90 active:scale-[0.98] transition-all shadow-lg shadow-[#59B292]/25">
-                    <Plus className="w-4 h-4 stroke-[3]" /> Add Skill Badge
+                    <Plus className="w-4 h-4 stroke-3" /> Add Skill Badge
                 </button>
             </form>
 
@@ -205,13 +223,12 @@ export default function SkillsEditor({ skills, setSkills, showToast, isDarkMode 
                                     <span className={`font-mono text-[10px] ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
                                         Proficiency
                                     </span>
-                                    <span className={`font-semibold px-2.5 py-0.5 rounded-md ${
-                                        s.proficiency === 'Expert'
-                                            ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                                            : s.proficiency === 'Proficient'
+                                    <span className={`font-semibold px-2.5 py-0.5 rounded-md ${s.proficiency === 'Expert'
+                                        ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                                        : s.proficiency === 'Proficient'
                                             ? 'bg-[#59B292]/10 text-[#59B292] border border-[#59B292]/20'
                                             : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                                    }`}>
+                                        }`}>
                                         {s.proficiency || 'Proficient'}
                                     </span>
                                 </div>

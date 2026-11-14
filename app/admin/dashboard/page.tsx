@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ExtendedProject, Skill, CVData, Testimonial } from '@/types';
 import { CheckCircle, Menu, X, Sun, Moon } from 'lucide-react';
-import AdminLogin from '@/components/admin/AdminLogin';
+import { createClient } from '@/utils/supabase/client';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import ProfileEditor from '@/components/admin/ProfileEditor';
 import ProjectsEditor from '@/components/admin/ProjectsEditor';
@@ -14,9 +14,8 @@ import Link from 'next/link';
 
 export default function AdminStudio() {
   const router = useRouter();
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [pinInput, setPinInput] = useState<string>('');
-  const [pinError, setPinError] = useState<boolean>(false);
+  const supabase = createClient();
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 
   const [mounted, setMounted] = useState<boolean>(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
@@ -24,11 +23,11 @@ export default function AdminStudio() {
   const [toast, setToast] = useState<string | null>(null);
 
   const [cvData, setCvData] = useState<CVData>({
-    fullName: "Dominic",
-    title: "Jr Website Developer",
-    email: "sgnickk@gmail.com",
-    phone: "+63 977 777 7777",
-    summary: "Frontend-focused Engineer with 3+ years of hands-on experience building fast, accessible, and maintainable web applications.",
+    fullName: "",
+    title: "",
+    email: "",
+    phone: "",
+    summary: "",
     experience: [],
     education: []
   });
@@ -37,12 +36,22 @@ export default function AdminStudio() {
   const [skills, setSkills] = useState<Skill[]>([]);
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
 
+  // 1. Suriin ang Supabase Auth session sa pag-mount ng dashboard
   useEffect(() => {
     setMounted(true);
-    const authStatus = sessionStorage.getItem('admin_authenticated');
-    if (authStatus === 'true') {
-      setIsAuthenticated(true);
-    }
+    
+    const checkUserSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        // Kung walang session, itapon pabalik sa login page
+        router.push('/admin/login');
+      } else {
+        setIsAuthenticated(true);
+      }
+    };
+
+    checkUserSession();
 
     const savedProj = localStorage.getItem('app_projects');
     const savedSkills = localStorage.getItem('app_skills');
@@ -51,7 +60,7 @@ export default function AdminStudio() {
     if (savedProj) setProjects(JSON.parse(savedProj));
     if (savedSkills) setSkills(JSON.parse(savedSkills));
     if (savedTestimonials) setTestimonials(JSON.parse(savedTestimonials));
-  }, []);
+  }, [router, supabase]);
 
   const showToast = (msg: string) => {
     setToast(msg);
@@ -90,38 +99,13 @@ export default function AdminStudio() {
     }
   }, [sidebarCollapsed]);
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (pinInput === '1234') {
-      setIsAuthenticated(true);
-      sessionStorage.setItem('admin_authenticated', 'true');
-      setPinError(false);
-      showToast("Welcome to Admin Studio!");
-    } else {
-      setPinError(true);
-    }
-  };
-
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
     setIsAuthenticated(false);
-    sessionStorage.removeItem('admin_authenticated');
-    router.push('/');
+    router.push('/admin/login');
   };
 
-  if (!mounted) return null;
-
-  if (!isAuthenticated) {
-    return (
-      <AdminLogin
-        pinInput={pinInput}
-        setPinInput={setPinInput}
-        handleLogin={handleLogin}
-        pinError={pinError}
-        isDarkMode={isDarkMode}
-        setIsDarkMode={setIsDarkMode}
-      />
-    );
-  }
+  if (!mounted || isAuthenticated === null) return null;
 
   return (
     <div className={`min-h-screen relative transition-colors duration-400 ${isDarkMode ? 'bg-black text-white' : 'bg-white text-black'}`}>
@@ -169,7 +153,7 @@ export default function AdminStudio() {
 
       {/* MOBILE DROPDOWN MENU */}
       {mobileMenuOpen && (
-        <div className={`lg:hidden fixed inset-x-0 top-[57px] z-40 border-b p-4 space-y-2 shadow-2xl ${isDarkMode ? 'bg-[#121212] border-[#222222]' : 'bg-gray-100 border-gray-200'}`}>
+        <div className={`lg:hidden fixed inset-x-0 top-14.25 z-40 border-b p-4 space-y-2 shadow-2xl ${isDarkMode ? 'bg-[#121212] border-[#222222]' : 'bg-gray-100 border-gray-200'}`}>
           <button onClick={() => { setActiveTab('profile'); setMobileMenuOpen(false); }} className="w-full text-left px-4 py-3 rounded-xl text-sm font-semibold">Profile & CV</button>
           <button onClick={() => { setActiveTab('projects'); setMobileMenuOpen(false); }} className="w-full text-left px-4 py-3 rounded-xl text-sm font-semibold">Manage Projects</button>
           <button onClick={() => { setActiveTab('skills'); setMobileMenuOpen(false); }} className="w-full text-left px-4 py-3 rounded-xl text-sm font-semibold">Manage Skills</button>
@@ -200,12 +184,12 @@ export default function AdminStudio() {
               <h1 className="text-2xl sm:text-3xl font-bold">Admin Content Studio</h1>
               <p className={`text-xs mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Manage and upload information live to your public portfolio.</p>
             </div>
-           <Link
-  href="/"
-  className="w-full sm:w-auto justify-center px-4 py-2.5 rounded-xl bg-[#59B292] text-black font-bold text-xs flex items-center gap-2 hover:opacity-90 transition shrink-0 shadow-lg shadow-[#59B292]/10"
->
-  View Live Website
-</Link>
+            <Link
+              href="/"
+              className="w-full sm:w-auto justify-center px-4 py-2.5 rounded-xl bg-[#59B292] text-black font-bold text-xs flex items-center gap-2 hover:opacity-90 transition shrink-0 shadow-lg shadow-[#59B292]/10"
+            >
+              View Live Website
+            </Link>
           </div>
 
           {activeTab === 'profile' && (
