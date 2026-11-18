@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Mail, Send, CheckCircle2, MessageSquareText } from 'lucide-react';
+import { Mail, Send, CheckCircle2 } from 'lucide-react';
+import emailjs from '@emailjs/browser';
 
 interface ContactSectionProps {
     isDarkMode: boolean;
@@ -17,6 +18,7 @@ export default function ContactSection({ isDarkMode, showToast }: ContactSection
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        
         if (!name.trim() || !email.trim() || !message.trim()) {
             showToast("Please fill in all fields.");
             return;
@@ -24,15 +26,41 @@ export default function ContactSection({ isDarkMode, showToast }: ContactSection
 
         setIsSubmitting(true);
 
-        // Simulation of form submission (You can replace this with a real Formspree endpoint URL later)
-        setTimeout(() => {
+        const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID;
+        const templateId = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID;
+        const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY;
+
+        if (!serviceId || !templateId || !publicKey) {
+            showToast("EmailJS configuration keys are missing.");
             setIsSubmitting(false);
-            setSubmitted(true);
-            showToast("Your message has been sent successfully!");
-            setName('');
-            setEmail('');
-            setMessage('');
-        }, 1000);
+            return;
+        }
+
+        try {
+            // I-initialize ang public key bago i-send
+            emailjs.init(publicKey);
+
+            const result = await emailjs.send(serviceId, templateId, {
+                from_name: name,
+                from_email: email,
+                message: message,
+            });
+
+            if (result.status === 200) {
+                setIsSubmitting(false);
+                setSubmitted(true);
+                showToast("Your message has been sent successfully!");
+                setName('');
+                setEmail('');
+                setMessage('');
+            } else {
+                throw new Error('Failed to send email.');
+            }
+        } catch (error: any) {
+            console.error("EmailJS Error details:", error);
+            showToast("Failed to send message. Please check network/firewall settings.");
+            setIsSubmitting(false);
+        }
     };
 
     return (
@@ -42,7 +70,7 @@ export default function ContactSection({ isDarkMode, showToast }: ContactSection
                     <Mail className="text-[#59B292] shrink-0" /> Get in Touch
                 </h2>
                 <p className={`text-sm mt-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                    Have a project in mind, need a frontend developer, or just want to collaborate? Drop a message here.
+                    Have a project in mind, need a developer, or just want to collaborate? Drop a message here.
                 </p>
             </div>
 

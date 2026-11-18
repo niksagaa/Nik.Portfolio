@@ -191,7 +191,6 @@ export default function SkillsEditor({ skills, setSkills, showToast, isDarkMode 
                             >
                                 <div className="flex items-start justify-between gap-3">
                                     <div className="flex items-center gap-3">
-                                        {/* FontAwesome Render Container */}
                                         <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-110 ${isDarkMode ? 'bg-black/60 border border-gray-800 text-[#59B292]' : 'bg-gray-100 border border-gray-200/60 text-[#59B292]'}`}>
                                             {s.icon ? (
                                                 <i className={`${s.icon} text-xl`} />

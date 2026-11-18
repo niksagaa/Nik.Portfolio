@@ -15,12 +15,12 @@ export async function login(email: string, password: string): Promise<boolean> {
         });
 
         if (error) {
-            console.error('[AUTH ERROR DETAIL]:', error.message, '| Code:', error.status);
+            console.log('[AUTH ERROR DETAIL]:', error.message, '| Code:', error.status);
             return false;
         }
 
         if (!data.session) {
-            console.error('[AUTH ERROR]: No active session returned from Supabase.');
+            console.log('[AUTH ERROR]: No active session returned from Supabase.');
             return false;
         }
 

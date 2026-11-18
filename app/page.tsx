@@ -18,6 +18,10 @@ import {
   getExperienceFromDB,
   getProjectInfoFromDB
 } from '@/services/publicdata/personalinfo';
+import {
+  comment,
+  getApprovedComments
+} from '@/services/publicdata/testimonials'
 
 export default function PublicPortfolio() {
   const router = useRouter();
@@ -31,9 +35,7 @@ export default function PublicPortfolio() {
 
   const [cvData, setCvData] = useState<CVData | null>(null);
 
-  const [testimonials, setTestimonials] = useState<Testimonial[]>([
-    { id: "t1", name: "Sarah Jenkins", role: "Product Lead at TechCorp", message: "Alex delivered clean, well-structured React code ahead of schedule.", rating: 5, date: "2026-05-15" }
-  ]);
+  const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [newName, setNewName] = useState('');
   const [newRole, setNewRole] = useState('');
   const [newMessage, setNewMessage] = useState('');
@@ -102,16 +104,27 @@ export default function PublicPortfolio() {
           setProjects(fetchedProjects);
         }
 
+        // Kunin ang testimonials mula sa Supabase
+        const fetchedTestimonials = await getApprovedComments();
+        if (fetchedTestimonials && fetchedTestimonials.length > 0) {
+          setTestimonials(fetchedTestimonials);
+        } else {
+          // Fallback sa localStorage kung walang laman sa database
+          const savedTestimonials = localStorage.getItem('app_testimonials');
+          if (savedTestimonials) {
+            setTestimonials(JSON.parse(savedTestimonials));
+          }
+        }
+
       } catch (error: any) {
         console.error("Error loading portfolio data from DB:", error?.message || error);
         const savedProj = localStorage.getItem('app_projects');
         const savedSkills = localStorage.getItem('app_skills');
+        const savedTestimonials = localStorage.getItem('app_testimonials');
         if (savedProj) setProjects(JSON.parse(savedProj));
         if (savedSkills) setSkills(JSON.parse(savedSkills));
+        if (savedTestimonials) setTestimonials(JSON.parse(savedTestimonials));
       }
-
-      const savedTestimonials = localStorage.getItem('app_testimonials');
-      if (savedTestimonials) setTestimonials(JSON.parse(savedTestimonials));
     }
 
     loadPortfolioData();
@@ -149,9 +162,9 @@ export default function PublicPortfolio() {
     }
   };
 
-  const handleAddTestimonial = (e: React.FormEvent) => {
+  const handleAddTestimonial = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newName.trim() || !newMessage.trim()) return;
+    if (!newName.trim() || !newMessage.trim() || !newRole.trim()) return;
     const now = new Date();
     const formattedDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
@@ -163,12 +176,18 @@ export default function PublicPortfolio() {
       rating: newRating,
       date: formattedDate
     };
-    setTestimonials([newEntry, ...testimonials]);
-    setNewName('');
-    setNewRole('');
-    setNewMessage('');
-    setNewRating(5);
-    showToast("Testimonial submitted successfully!");
+    try {
+      await comment(newEntry);
+      setTestimonials([newEntry, ...testimonials]);
+      setNewName('');
+      setNewRole('');
+      setNewMessage('');
+      setNewRating(5);
+      showToast("Testimonial submitted successfully!");
+    } catch (error: any) {
+      console.error("Error submitting testimonial:", error);
+      showToast("Failed to submit testimonial.");
+    }
   };
 
   const currentYear = mounted ? new Date().getFullYear() : 2026;

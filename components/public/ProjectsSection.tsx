@@ -9,25 +9,23 @@ interface ProjectsSectionProps {
   isDarkMode: boolean;
 }
 
-// Hiwalay na sub-component para isolated ang state ng bawat card
 function ProjectCard({ project, isDarkMode }: { project: ExtendedProject; isDarkMode: boolean }) {
   const [isExpanded, setIsExpanded] = useState(false);
 
   return (
-    <div 
-      className={`p-6 sm:p-7 rounded-2xl border flex flex-col justify-between space-y-6 transition-all ${
-        isDarkMode 
-          ? 'bg-[#121212] border-[#222222] hover:border-[#333333]' 
+    <div
+      className={`p-6 sm:p-7 rounded-2xl border flex flex-col justify-between space-y-6 transition-all ${isDarkMode
+          ? 'bg-[#121212] border-[#222222] hover:border-[#333333]'
           : 'bg-white border-gray-200 hover:border-gray-300 shadow-xs'
-      }`}
+        }`}
     >
       <div className="space-y-4">
         <div className="flex justify-between items-start gap-4">
-          <div className="space-y-1.5">
+          <div className="space-y-1.5 flex flex-row justify-between w-full items-center">
+            <h3 className="text-lg font-bold tracking-tight">{project.title}</h3>
             <span className="text-[10px] font-semibold uppercase tracking-wider px-2.5 py-1 rounded-md bg-[#59B292]/10 text-[#59B292]">
               {project.category || 'Frontend'}
             </span>
-            <h3 className="text-lg font-bold tracking-tight">{project.title}</h3>
           </div>
           {project.featured && (
             <span className="flex items-center gap-1 text-[10px] font-medium text-yellow-500 bg-yellow-500/10 px-2 py-1 rounded-md">
@@ -44,11 +42,10 @@ function ProjectCard({ project, isDarkMode }: { project: ExtendedProject; isDark
         {project.tags && project.tags.length > 0 && (
           <div className="flex flex-wrap gap-2 pt-1">
             {project.tags.map((tag, idx) => (
-              <span 
+              <span
                 key={idx}
-                className={`text-[11px] font-mono px-2.5 py-1 rounded-md border ${
-                  isDarkMode ? 'bg-black/40 border-[#222222] text-gray-300' : 'bg-gray-50 border-gray-200 text-gray-700'
-                }`}
+                className={`text-[11px] font-mono px-2.5 py-1 rounded-md border ${isDarkMode ? 'bg-black/40 border-[#222222] text-gray-300' : 'bg-gray-50 border-gray-200 text-gray-700'
+                  }`}
               >
                 {tag}
               </span>
@@ -108,18 +105,18 @@ function ProjectCard({ project, isDarkMode }: { project: ExtendedProject; isDark
           {project.githubUrl && (
             <a href={project.githubUrl} target="_blank" rel="noreferrer" className={`flex items-center gap-1.5 transition py-1 ${isDarkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-black'}`}>
               <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
-                <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+                <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
               </svg>
               Source
             </a>
           )}
         </div>
 
-        <button 
+        <button
           onClick={() => setIsExpanded(!isExpanded)}
           className="text-[#59B292] hover:underline flex items-center gap-1.5 font-medium py-1"
         >
-          <span>{isExpanded ? 'Hide details' : 'View case study'}</span> 
+          <span>{isExpanded ? 'Hide details' : 'View case study'}</span>
           {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
         </button>
       </div>
@@ -132,8 +129,8 @@ export default function ProjectsSection({ projects, isDarkMode }: ProjectsSectio
 
   const categories = ['All', ...Array.from(new Set(projects.map((p) => p.category || 'Frontend')))];
 
-  const filteredProjects = selectedCategory === 'All' 
-    ? projects 
+  const filteredProjects = selectedCategory === 'All'
+    ? projects
     : projects.filter((p) => (p.category || 'Frontend') === selectedCategory);
 
   return (
@@ -154,13 +151,12 @@ export default function ProjectsSection({ projects, isDarkMode }: ProjectsSectio
               <button
                 key={cat}
                 onClick={() => setSelectedCategory(cat)}
-                className={`px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                  selectedCategory === cat
+                className={`px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all ${selectedCategory === cat
                     ? 'bg-[#59B292] text-black font-semibold shadow-sm'
-                    : isDarkMode 
-                      ? 'bg-[#121212] border border-[#222222] text-gray-400 hover:text-white' 
+                    : isDarkMode
+                      ? 'bg-[#121212] border border-[#222222] text-gray-400 hover:text-white'
                       : 'bg-gray-100 border border-gray-200 text-gray-600 hover:text-black'
-                }`}
+                  }`}
               >
                 {cat}
               </button>
