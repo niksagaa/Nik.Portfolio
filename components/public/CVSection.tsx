@@ -33,7 +33,6 @@ export default function CVSection({ cvData, isDarkMode }: CVSectionProps) {
                     <div className={`text-left sm:text-right text-xs space-y-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                         <p>{cvData.email}</p>
                         <p>{cvData.phone}</p>
-                        <p>{cvData.location}</p>
                     </div>
                 </div>
 
