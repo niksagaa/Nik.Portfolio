@@ -104,12 +104,10 @@ export default function PublicPortfolio() {
           setProjects(fetchedProjects);
         }
 
-        // Kunin ang testimonials mula sa Supabase
         const fetchedTestimonials = await getApprovedComments();
         if (fetchedTestimonials && fetchedTestimonials.length > 0) {
           setTestimonials(fetchedTestimonials);
         } else {
-          // Fallback sa localStorage kung walang laman sa database
           const savedTestimonials = localStorage.getItem('app_testimonials');
           if (savedTestimonials) {
             setTestimonials(JSON.parse(savedTestimonials));

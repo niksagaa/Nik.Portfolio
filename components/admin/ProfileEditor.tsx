@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { User, Save, Plus, Trash2, Edit, SaveIcon, ArrowUpAZ } from 'lucide-react';
+import { User, Save, Plus, Trash2, Edit, SaveIcon } from 'lucide-react';
 import { CVData, Experience, Education } from '@/types';
 import { getProfileFromDB, saveProfileToDB } from '@/services/profileServices/personalInfo';
 import { saveExperienceToDB, getExperienceFromDB, deleteExperienceFromDB, updateExperienceFromDB } from '@/services/profileServices/experience'
@@ -21,11 +21,10 @@ export default function ProfileEditor({ cvData, setCvData, showToast, isDarkMode
   const [newDetails, setNewDetails] = useState('');
   const [experienceID, setexperienceID] = useState<string | null>(null)
 
-  // Temporary state for new education form & edit ID tracking
   const [newDegree, setNewDegree] = useState('');
   const [newSchool, setNewSchool] = useState('');
   const [newEduPeriod, setNewEduPeriod] = useState('');
-  const [educationID, setEducationID] = useState<string | null>(null); // 👈 ID state para sa Education edit
+  const [educationID, setEducationID] = useState<string | null>(null);
 
   // Auto-fetch profile data on mount using the service layer
   useEffect(() => {

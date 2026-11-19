@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 import { FileText, Printer } from 'lucide-react';
 import { CVData } from '@/types';
 

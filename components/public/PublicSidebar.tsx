@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 import {
   Sun, Moon, PanelLeftClose, PanelLeftOpen,
   FolderGit2, Code2, FileText, Quote, Mail, User, Terminal

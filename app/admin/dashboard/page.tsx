@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { ExtendedProject, Skill, CVData, Testimonial } from '@/types';
 import { CheckCircle, Menu, X, Sun, Moon } from 'lucide-react';
@@ -14,10 +14,8 @@ import Link from 'next/link';
 
 export default function AdminStudio() {
   const router = useRouter();
-  const supabase = createClient();
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const supabase = useMemo(() => createClient(), []);
 
-  const [mounted, setMounted] = useState<boolean>(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<string>('profile');
   const [toast, setToast] = useState<string | null>(null);
@@ -36,23 +34,7 @@ export default function AdminStudio() {
   const [skills, setSkills] = useState<Skill[]>([]);
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
 
-  // 1. Suriin ang Supabase Auth session sa pag-mount ng dashboard
   useEffect(() => {
-    setMounted(true);
-    
-    const checkUserSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        // Kung walang session, itapon pabalik sa login page
-        router.push('/admin/login');
-      } else {
-        setIsAuthenticated(true);
-      }
-    };
-
-    checkUserSession();
-
     const savedProj = localStorage.getItem('app_projects');
     const savedSkills = localStorage.getItem('app_skills');
     const savedTestimonials = localStorage.getItem('app_testimonials');
@@ -60,7 +42,7 @@ export default function AdminStudio() {
     if (savedProj) setProjects(JSON.parse(savedProj));
     if (savedSkills) setSkills(JSON.parse(savedSkills));
     if (savedTestimonials) setTestimonials(JSON.parse(savedTestimonials));
-  }, [router, supabase]);
+  }, []);
 
   const showToast = (msg: string) => {
     setToast(msg);
@@ -101,11 +83,8 @@ export default function AdminStudio() {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    setIsAuthenticated(false);
-    router.push('/admin/login');
+    window.location.assign('/admin/login');
   };
-
-  if (!mounted || isAuthenticated === null) return null;
 
   return (
     <div className={`min-h-screen relative transition-colors duration-400 ${isDarkMode ? 'bg-black text-white' : 'bg-white text-black'}`}>

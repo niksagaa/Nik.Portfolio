@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 import Link from 'next/link';
 import { Compass, ArrowLeft } from 'lucide-react';
 
@@ -8,7 +7,7 @@ export default function NotFound() {
   return (
     <div className="min-h-screen bg-black text-white flex items-center justify-center p-4">
       <div className="max-w-md w-full text-center space-y-6 p-8 sm:p-10 rounded-3xl border border-[#222222] bg-[#121212]/80 backdrop-blur-xl shadow-2xl relative overflow-hidden">
-        
+
         <div className="absolute -top-24 -left-24 w-48 h-48 bg-[#59B292]/10 rounded-full blur-3xl pointer-events-none"></div>
 
         <div className="w-16 h-16 rounded-2xl bg-[#59B292]/10 border border-[#59B292]/30 flex items-center justify-center mx-auto text-[#59B292] shadow-inner">

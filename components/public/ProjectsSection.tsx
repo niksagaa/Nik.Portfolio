@@ -170,7 +170,6 @@ export default function ProjectsSection({ projects, isDarkMode }: ProjectsSectio
           <p className="text-xs">No projects found in this category.</p>
         </div>
       ) : (
-        /* May kasamang `items-start` dito para hindi maghilahan sa taas ang mga katabing card */
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
           {filteredProjects.map((project, idx) => (
             <ProjectCard key={project.id || idx} project={project} isDarkMode={isDarkMode} />

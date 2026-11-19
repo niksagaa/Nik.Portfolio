@@ -37,7 +37,6 @@ export default function ContactSection({ isDarkMode, showToast }: ContactSection
         }
 
         try {
-            // I-initialize ang public key bago i-send
             emailjs.init(publicKey);
 
             const result = await emailjs.send(serviceId, templateId, {
