@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
 import { ExtendedProject, Skill, CVData, Testimonial } from '@/types';
 import { CheckCircle, Menu, X, Sun, Moon } from 'lucide-react';
 import { createClient } from '@/utils/supabase/client';
@@ -13,12 +12,12 @@ import TestimonialsEditor from '@/components/admin/TestimonialsEditor';
 import Link from 'next/link';
 
 export default function AdminStudio() {
-  const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<string>('profile');
   const [toast, setToast] = useState<string | null>(null);
+  const [hasHydratedPrefs, setHasHydratedPrefs] = useState<boolean>(false);
 
   const [cvData, setCvData] = useState<CVData>({
     fullName: "",
@@ -34,6 +33,9 @@ export default function AdminStudio() {
   const [skills, setSkills] = useState<Skill[]>([]);
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
 
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(true);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(false);
+
   useEffect(() => {
     const savedProj = localStorage.getItem('app_projects');
     const savedSkills = localStorage.getItem('app_skills');
@@ -42,44 +44,34 @@ export default function AdminStudio() {
     if (savedProj) setProjects(JSON.parse(savedProj));
     if (savedSkills) setSkills(JSON.parse(savedSkills));
     if (savedTestimonials) setTestimonials(JSON.parse(savedTestimonials));
+
+    const savedTheme = localStorage.getItem('portfolio_theme');
+    if (savedTheme !== null) {
+      setIsDarkMode(JSON.parse(savedTheme));
+    }
+
+    const savedCollapsed = localStorage.getItem('admin_sidebar_collapsed');
+    if (savedCollapsed !== null) {
+      setSidebarCollapsed(JSON.parse(savedCollapsed));
+    }
+
+    setHasHydratedPrefs(true);
   }, []);
+
+  useEffect(() => {
+    if (!hasHydratedPrefs) return;
+    localStorage.setItem('portfolio_theme', JSON.stringify(isDarkMode));
+  }, [isDarkMode, hasHydratedPrefs]);
+
+  useEffect(() => {
+    if (!hasHydratedPrefs) return;
+    localStorage.setItem('admin_sidebar_collapsed', JSON.stringify(sidebarCollapsed));
+  }, [sidebarCollapsed, hasHydratedPrefs]);
 
   const showToast = (msg: string) => {
     setToast(msg);
     setTimeout(() => setToast(null), 3000);
   };
-
-  const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
-    if (typeof window !== 'undefined') {
-      const savedTheme = localStorage.getItem('portfolio_theme');
-      if (savedTheme !== null) {
-        return JSON.parse(savedTheme);
-      }
-    }
-    return true;
-  });
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('portfolio_theme', JSON.stringify(isDarkMode));
-    }
-  }, [isDarkMode]);
-
-  const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('admin_sidebar_collapsed');
-      if (saved !== null) {
-        return JSON.parse(saved);
-      }
-    }
-    return false;
-  });
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('admin_sidebar_collapsed', JSON.stringify(sidebarCollapsed));
-    }
-  }, [sidebarCollapsed]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -115,6 +107,7 @@ export default function AdminStudio() {
 
         <div className="flex items-center gap-2">
           <button
+            type="button"
             onClick={() => setIsDarkMode(!isDarkMode)}
             className={`p-2.5 rounded-xl border transition flex items-center justify-center ${isDarkMode
               ? 'border-[#222222] text-yellow-400 hover:bg-white/5'
@@ -124,7 +117,11 @@ export default function AdminStudio() {
           >
             {isDarkMode ? <Sun className="w-4 h-4 stroke-[1.5]" /> : <Moon className="w-4 h-4 stroke-[1.5]" />}
           </button>
-          <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className={`p-2 rounded-lg transition ${isDarkMode ? 'bg-[#222222] text-white' : 'bg-gray-200 text-black'}`}>
+          <button
+            type="button"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className={`p-2 rounded-lg transition ${isDarkMode ? 'bg-[#222222] text-white' : 'bg-gray-200 text-black'}`}
+          >
             {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
         </div>
@@ -133,11 +130,11 @@ export default function AdminStudio() {
       {/* MOBILE DROPDOWN MENU */}
       {mobileMenuOpen && (
         <div className={`lg:hidden fixed inset-x-0 top-14.25 z-40 border-b p-4 space-y-2 shadow-2xl ${isDarkMode ? 'bg-[#121212] border-[#222222]' : 'bg-gray-100 border-gray-200'}`}>
-          <button onClick={() => { setActiveTab('profile'); setMobileMenuOpen(false); }} className="w-full text-left px-4 py-3 rounded-xl text-sm font-semibold">Profile & CV</button>
-          <button onClick={() => { setActiveTab('projects'); setMobileMenuOpen(false); }} className="w-full text-left px-4 py-3 rounded-xl text-sm font-semibold">Manage Projects</button>
-          <button onClick={() => { setActiveTab('skills'); setMobileMenuOpen(false); }} className="w-full text-left px-4 py-3 rounded-xl text-sm font-semibold">Manage Skills</button>
-          <button onClick={() => { setActiveTab('testimonials'); setMobileMenuOpen(false); }} className="w-full text-left px-4 py-3 rounded-xl text-sm font-semibold">Testimonials</button>
-          <button onClick={handleLogout} className="w-full text-left px-4 py-3 rounded-xl text-sm font-semibold text-red-500">Exit to Portfolio</button>
+          <button type="button" onClick={() => { setActiveTab('profile'); setMobileMenuOpen(false); }} className="w-full text-left px-4 py-3 rounded-xl text-sm font-semibold">Profile & CV</button>
+          <button type="button" onClick={() => { setActiveTab('projects'); setMobileMenuOpen(false); }} className="w-full text-left px-4 py-3 rounded-xl text-sm font-semibold">Manage Projects</button>
+          <button type="button" onClick={() => { setActiveTab('skills'); setMobileMenuOpen(false); }} className="w-full text-left px-4 py-3 rounded-xl text-sm font-semibold">Manage Skills</button>
+          <button type="button" onClick={() => { setActiveTab('testimonials'); setMobileMenuOpen(false); }} className="w-full text-left px-4 py-3 rounded-xl text-sm font-semibold">Testimonials</button>
+          <button type="button" onClick={handleLogout} className="w-full text-left px-4 py-3 rounded-xl text-sm font-semibold text-red-500">Exit to Portfolio</button>
         </div>
       )}
 
